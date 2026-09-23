@@ -1,13 +1,5 @@
-import {
-  defineVegaPlugin,
-  type VegaDisposable,
-  type VegaPlugin,
-  type VegaUiSlotContext,
-} from "@haneoka/vega/plugin";
-import {
-  VEGA_SHELL_CONTROLLER,
-  type VegaShellController,
-} from "@haneoka/vega/shell";
+import { defineVegaPlugin, type VegaDisposable, type VegaPlugin, type VegaUiSlotContext } from "@haneoka/vega/plugin";
+import { VEGA_SHELL_CONTROLLER, type VegaShellController } from "@haneoka/vega/shell";
 
 export interface VegaEndingPluginOptions {
   /** Main line shown after the final command completes. */
@@ -130,19 +122,12 @@ const element = <K extends keyof HTMLElementTagNameMap>(
   return node;
 };
 
-const startFrames = (
-  host: HTMLElement,
-  signal: AbortSignal,
-  frame: () => void,
-): (() => void) => {
+const startFrames = (host: HTMLElement, signal: AbortSignal, frame: () => void): (() => void) => {
   const view = host.ownerDocument.defaultView;
   const request =
     view?.requestAnimationFrame?.bind(view) ??
-    ((callback: FrameRequestCallback) =>
-      view?.setTimeout(() => callback(Date.now()), 16) ?? 0);
-  const cancel =
-    view?.cancelAnimationFrame?.bind(view) ??
-    ((handle: number) => view?.clearTimeout(handle));
+    ((callback: FrameRequestCallback) => view?.setTimeout(() => callback(Date.now()), 16) ?? 0);
+  const cancel = view?.cancelAnimationFrame?.bind(view) ?? ((handle: number) => view?.clearTimeout(handle));
   let active = true;
   let handle = 0;
   const tick: FrameRequestCallback = () => {
@@ -163,10 +148,7 @@ const startFrames = (
   };
 };
 
-const restart = async (
-  context: VegaUiSlotContext,
-  shell: VegaShellController | undefined,
-): Promise<void> => {
+const restart = async (context: VegaUiSlotContext, shell: VegaShellController | undefined): Promise<void> => {
   context.state.finished = false;
   if (shell) {
     await shell.start();
@@ -204,9 +186,7 @@ const mountEnding = (
     content.append(message);
   }
 
-  const shell = context.services(
-    VEGA_SHELL_CONTROLLER,
-  ) as VegaShellControllerWithTitle | undefined;
+  const shell = context.services(VEGA_SHELL_CONTROLLER) as VegaShellControllerWithTitle | undefined;
   const actions = element(document, "div", "vega-ending__actions");
   const buttons: HTMLButtonElement[] = [];
   let busy = false;
@@ -230,10 +210,7 @@ const mountEnding = (
     buttons.push(replay);
     actions.append(replay);
   }
-  if (
-    options.returnToTitle !== false &&
-    typeof shell?.returnToTitle === "function"
-  ) {
+  if (options.returnToTitle !== false && typeof shell?.returnToTitle === "function") {
     const title = element(document, "button", "vega-ending__button");
     title.type = "button";
     title.textContent = options.titleLabel ?? "Title";
@@ -277,9 +254,7 @@ const mountEnding = (
   };
 };
 
-export const createVegaEndingPlugin = (
-  options: VegaEndingPluginOptions = {},
-): VegaPlugin =>
+export const createVegaEndingPlugin = (options: VegaEndingPluginOptions = {}): VegaPlugin =>
   defineVegaPlugin({
     manifest: {
       id: "haneoka.vega-ending",
@@ -294,8 +269,7 @@ export const createVegaEndingPlugin = (
         id: "ending",
         name: "Ending presentation",
         slot: "after-stage",
-        mount: (host, slotContext) =>
-          mountEnding(host, slotContext, options),
+        mount: (host, slotContext) => mountEnding(host, slotContext, options),
       });
     },
   });
