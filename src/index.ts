@@ -1,4 +1,5 @@
-import { defineVegaPlugin, type VegaDisposable, type VegaPlugin, type VegaUiSlotContext } from "@haneoka/vega/plugin";
+import type { VegaWebUiSlotContext as VegaUiSlotContext } from "@haneoka/vega/web/ui";
+import { defineVegaPlugin, type VegaDisposable, type VegaPlugin } from "@haneoka/vega/plugin";
 import { VEGA_SHELL_CONTROLLER, type VegaShellController } from "@haneoka/vega/shell";
 
 export interface VegaEndingPluginOptions {
@@ -16,6 +17,17 @@ export interface VegaEndingPluginOptions {
 
 type VegaShellControllerWithTitle = VegaShellController & {
   returnToTitle?(): Promise<void> | void;
+};
+
+const endingText = (language: string): readonly [string, string, string] => {
+  const locale = language.toLowerCase();
+  if (locale === "ja" || locale.startsWith("ja-")) return ["おわり", "もう一度", "タイトルへ"];
+  if (locale === "ko" || locale.startsWith("ko-")) return ["끝", "다시 보기", "타이틀로"];
+  if (locale.startsWith("zh"))
+    return /(?:tw|hk|mo|hant)/u.test(locale)
+      ? ["故事結束", "重新播放", "返回標題"]
+      : ["故事结束", "重新播放", "返回标题"];
+  return ["The End", "Replay", "Title"];
 };
 
 const ENDING_CSS = String.raw`
@@ -187,6 +199,8 @@ const mountEnding = (
   }
 
   const shell = context.services(VEGA_SHELL_CONTROLLER) as VegaShellControllerWithTitle | undefined;
+  let replayButton: HTMLButtonElement | undefined;
+  let titleButton: HTMLButtonElement | undefined;
   const actions = element(document, "div", "vega-ending__actions");
   const buttons: HTMLButtonElement[] = [];
   let busy = false;
@@ -206,6 +220,7 @@ const mountEnding = (
     const replay = element(document, "button", "vega-ending__button");
     replay.type = "button";
     replay.textContent = options.replayLabel ?? "Replay";
+    replayButton = replay;
     replay.addEventListener("click", () => void run(() => restart(context, shell)));
     buttons.push(replay);
     actions.append(replay);
@@ -214,6 +229,7 @@ const mountEnding = (
     const title = element(document, "button", "vega-ending__button");
     title.type = "button";
     title.textContent = options.titleLabel ?? "Title";
+    titleButton = title;
     title.addEventListener(
       "click",
       () =>
@@ -238,6 +254,16 @@ const mountEnding = (
     root.dataset.visible = String(next);
     context.root.dataset.vegaEnding = next ? "true" : "false";
     if (next) {
+      const preferred = shell?.snapshot().settings.uiLanguage;
+      const language =
+        preferred && preferred !== "auto"
+          ? preferred
+          : document.documentElement.lang || document.defaultView?.navigator.language || "en";
+      const [ending, replay, title] = endingText(language);
+      heading.textContent = options.heading ?? ending;
+      root.setAttribute("aria-label", options.heading ?? ending);
+      if (replayButton) replayButton.textContent = options.replayLabel ?? replay;
+      if (titleButton) titleButton.textContent = options.titleLabel ?? title;
       (buttons[0] ?? heading).focus({ preventScroll: true });
     }
   };
@@ -269,7 +295,8 @@ export const createVegaEndingPlugin = (options: VegaEndingPluginOptions = {}): V
         id: "ending",
         name: "Ending presentation",
         slot: "after-stage",
-        mount: (host, slotContext) => mountEnding(host, slotContext, options),
+        hostKind: "web",
+        mount: (host: HTMLElement, slotContext: VegaUiSlotContext) => mountEnding(host, slotContext, options),
       });
     },
   });
