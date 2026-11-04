@@ -35,23 +35,24 @@ const engine = new VegaEngine({
 });
 ```
 
-The default export, `vegaEndingPlugin`, uses the defaults below.
+The default export, `vegaEndingPlugin`, follows the shell's interface language,
+then the document language. Default labels are available in English, Japanese,
+Korean, Simplified Chinese and Traditional Chinese. The table shows English defaults.
 
 ## Options
 
-| Option | Meaning | Default |
-| --- | --- | --- |
-| `heading` | Main line, also the screen's accessible name | `"The End"` |
-| `message` | Optional short line under the heading | none |
-| `replay` | Show a button that restarts the story from the beginning | `true` |
-| `replayLabel` | Its text | `"Replay"` |
-| `returnToTitle` | Show a button that returns to the title screen | `true` |
-| `titleLabel` | Its text | `"Title"` |
+| Option          | Meaning                                                  | Default     |
+| --------------- | -------------------------------------------------------- | ----------- |
+| `heading`       | Main line, also the screen's accessible name             | `"The End"` |
+| `message`       | Optional short line under the heading                    | none        |
+| `replay`        | Show a button that restarts the story from the beginning | `true`      |
+| `replayLabel`   | Its text                                                 | `"Replay"`  |
+| `returnToTitle` | Show a button that returns to the title screen           | `true`      |
+| `titleLabel`    | Its text                                                 | `"Title"`   |
 
 The title button only appears when a shell that has a title screen, such as
 [Vega Default Shell](https://github.com/haneoka-gakuen/vega-shell-default), is
-installed. Labels are plain strings, so pass them already translated for your
-player's language.
+installed. Explicit labels override localization and remain unchanged.
 
 ## Behaviour
 
